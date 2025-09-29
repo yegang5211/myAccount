@@ -52,6 +52,141 @@ st.markdown("""
     .stButton > button:hover {
         background-color: #1e5f7a;
     }
+    .wechat-warning {
+        background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        position: relative;
+        transform: translateY(-100%);
+        opacity: 0;
+        transition: all 0.5s ease-in-out;
+        animation: slideInDown 0.6s ease-out forwards, pulse 3s ease-in-out 1s infinite;
+    }
+    .wechat-warning.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    .wechat-warning h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    .wechat-warning p {
+        margin: 0.5rem 0;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+    .wechat-steps {
+        background-color: rgba(255, 255, 255, 0.15);
+        padding: 0.8rem;
+        border-radius: 0.4rem;
+        margin-top: 0.5rem;
+        backdrop-filter: blur(10px);
+    }
+    .wechat-steps ol {
+        margin: 0;
+        padding-left: 1.2rem;
+        text-align: left;
+    }
+    .wechat-steps li {
+        margin: 0.3rem 0;
+        font-size: 0.8rem;
+        line-height: 1.3;
+    }
+    .wechat-close {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(5px);
+    }
+    .wechat-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+    }
+    .wechat-icon {
+        font-size: 1.3rem;
+        margin-right: 0.4rem;
+    }
+    @keyframes slideInDown {
+        from {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    @keyframes pulse {
+        0%, 100% { 
+            transform: scale(1);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+        50% { 
+            transform: scale(1.02);
+            box-shadow: 0 6px 16px rgba(255, 107, 107, 0.6);
+        }
+    }
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        .wechat-warning {
+            margin: 0.5rem;
+            padding: 0.8rem;
+            border-radius: 0.4rem;
+        }
+        .wechat-warning h3 {
+            font-size: 1rem;
+        }
+        .wechat-warning p {
+            font-size: 0.8rem;
+        }
+        .wechat-steps {
+            padding: 0.6rem;
+        }
+        .wechat-steps li {
+            font-size: 0.75rem;
+        }
+        .wechat-close {
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+        }
+    }
+    @media (max-width: 480px) {
+        .wechat-warning {
+            margin: 0.3rem;
+            padding: 0.6rem;
+        }
+        .wechat-warning h3 {
+            font-size: 0.9rem;
+        }
+        .wechat-warning p {
+            font-size: 0.75rem;
+        }
+        .wechat-steps {
+            padding: 0.5rem;
+        }
+        .wechat-steps li {
+            font-size: 0.7rem;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -62,7 +197,199 @@ def get_data_manager():
 
 data_manager = get_data_manager()
 
+def is_wechat_browser():
+    """
+    检测是否在微信浏览器中运行
+    """
+    try:
+        # 获取用户代理字符串
+        user_agent = st.get_option("browser.gatherUsageStats")
+        if user_agent is None:
+            # 尝试从请求头获取
+            import streamlit.web.server.server as server
+            if hasattr(server, '_get_user_agent'):
+                user_agent = server._get_user_agent()
+            else:
+                # 使用JavaScript检测
+                return st.components.v1.html("""
+                <script>
+                function detectWechat() {
+                    var ua = navigator.userAgent.toLowerCase();
+                    var isWechat = ua.indexOf('micromessenger') !== -1;
+                    if (isWechat) {
+                        window.parent.postMessage({type: 'wechat_detected'}, '*');
+                    }
+                }
+                detectWechat();
+                </script>
+                """, height=0)
+        
+        # 检查用户代理字符串
+        if user_agent and 'micromessenger' in user_agent.lower():
+            return True
+        return False
+    except:
+        # 如果检测失败，使用JavaScript方法
+        return st.components.v1.html("""
+        <script>
+        function detectWechat() {
+            var ua = navigator.userAgent.toLowerCase();
+            var isWechat = ua.indexOf('micromessenger') !== -1;
+            if (isWechat) {
+                // 显示微信提示
+                var warning = document.createElement('div');
+                warning.className = 'wechat-warning';
+                warning.innerHTML = `
+                    <h3><span class="wechat-icon">⚠️</span>检测到微信浏览器</h3>
+                    <p>为了获得最佳体验，建议在外部浏览器中打开此应用</p>
+                    <div class="wechat-steps">
+                        <ol>
+                            <li>点击右上角菜单按钮（⋮）</li>
+                            <li>选择"在浏览器中打开"</li>
+                            <li>在外部浏览器中享受完整功能</li>
+                        </ol>
+                    </div>
+                `;
+                document.body.insertBefore(warning, document.body.firstChild);
+            }
+        }
+        detectWechat();
+        </script>
+        """, height=0)
+
+def show_wechat_warning():
+    """
+    显示微信浏览器警告提示
+    """
+    st.markdown("""
+    <div class="wechat-warning">
+        <h3><span class="wechat-icon">⚠️</span>检测到微信浏览器</h3>
+        <p>为了获得最佳体验，建议在外部浏览器中打开此应用</p>
+        <div class="wechat-steps">
+            <ol>
+                <li>点击右上角菜单按钮（⋮）</li>
+                <li>选择"在浏览器中打开"</li>
+                <li>在外部浏览器中享受完整功能</li>
+            </ol>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 def main():
+    # 微信浏览器检测和提示
+    st.components.v1.html("""
+    <script>
+    (function() {
+        // 检查是否已经关闭过提示
+        function isWarningDismissed() {
+            try {
+                return localStorage.getItem('wechat_warning_dismissed') === 'true';
+            } catch (e) {
+                return false;
+            }
+        }
+        
+        // 标记提示已关闭
+        function dismissWarning() {
+            try {
+                localStorage.setItem('wechat_warning_dismissed', 'true');
+            } catch (e) {
+                console.log('无法保存到localStorage');
+            }
+        }
+        
+        // 检测微信浏览器
+        function isWechatBrowser() {
+            var ua = navigator.userAgent.toLowerCase();
+            return ua.indexOf('micromessenger') !== -1;
+        }
+        
+        // 检测是否在小程序环境
+        function isMiniprogram() {
+            var ua = navigator.userAgent.toLowerCase();
+            return ua.indexOf('miniprogram') !== -1 || 
+                   window.__wxjs_environment === 'miniprogram' ||
+                   window.navigator.userAgent.indexOf('miniProgram') !== -1;
+        }
+        
+        // 创建微信提示
+        function createWechatWarning() {
+            // 如果已经关闭过，不再显示
+            if (isWarningDismissed()) {
+                return;
+            }
+            
+            // 如果在小程序环境，不显示提示
+            if (isMiniprogram()) {
+                return;
+            }
+            
+            var warning = document.createElement('div');
+            warning.className = 'wechat-warning';
+            warning.innerHTML = `
+                <button class="wechat-close" onclick="closeWechatWarning()" title="关闭提示">×</button>
+                <h3><span class="wechat-icon">⚠️</span>检测到微信浏览器</h3>
+                <p>为了获得最佳体验，建议在外部浏览器中打开此应用</p>
+                <div class="wechat-steps">
+                    <ol>
+                        <li>点击右上角菜单按钮（⋮）</li>
+                        <li>选择"在浏览器中打开"</li>
+                        <li>在外部浏览器中享受完整功能</li>
+                    </ol>
+                </div>
+            `;
+            
+            // 插入到页面顶部
+            document.body.insertBefore(warning, document.body.firstChild);
+            
+            // 延迟添加show类以触发动画
+            setTimeout(function() {
+                warning.classList.add('show');
+            }, 100);
+        }
+        
+        // 关闭提示函数
+        window.closeWechatWarning = function() {
+            var warning = document.querySelector('.wechat-warning');
+            if (warning) {
+                warning.style.transform = 'translateY(-100%)';
+                warning.style.opacity = '0';
+                setTimeout(function() {
+                    if (warning.parentNode) {
+                        warning.parentNode.removeChild(warning);
+                    }
+                }, 500);
+                dismissWarning();
+            }
+        };
+        
+        // 主检测函数
+        function detectWechat() {
+            if (isWechatBrowser()) {
+                createWechatWarning();
+            }
+        }
+        
+        // 页面加载完成后检测
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', detectWechat);
+        } else {
+            detectWechat();
+        }
+        
+        // 监听页面可见性变化，避免重复显示
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && isWechatBrowser() && !isWarningDismissed() && !isMiniprogram()) {
+                var existingWarning = document.querySelector('.wechat-warning');
+                if (!existingWarning) {
+                    createWechatWarning();
+                }
+            }
+        });
+    })();
+    </script>
+    """, height=0)
+    
     # 主标题
     st.markdown('<h1 class="main-header">💰 我的记账本</h1>', unsafe_allow_html=True)
     

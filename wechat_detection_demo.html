@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信浏览器检测功能演示</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2E86AB, #1e5f7a);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .content {
+            padding: 2rem;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #2E86AB;
+        }
+        .feature-card h3 {
+            margin-top: 0;
+            color: #2E86AB;
+        }
+        .demo-section {
+            background: #e3f2fd;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+        .test-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        .test-btn {
+            background: #2E86AB;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+        .test-btn:hover {
+            background: #1e5f7a;
+        }
+        .test-btn.secondary {
+            background: #6c757d;
+        }
+        .test-btn.secondary:hover {
+            background: #5a6268;
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+        .status {
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            margin: 0.5rem 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        /* 微信提示样式 */
+        .wechat-warning {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+            position: relative;
+            transform: translateY(-100%);
+            opacity: 0;
+            transition: all 0.5s ease-in-out;
+            animation: slideInDown 0.6s ease-out forwards, pulse 3s ease-in-out 1s infinite;
+        }
+        .wechat-warning.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .wechat-warning h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .wechat-warning p {
+            margin: 0.5rem 0;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        .wechat-steps {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 0.8rem;
+            border-radius: 0.4rem;
+            margin-top: 0.5rem;
+            backdrop-filter: blur(10px);
+        }
+        .wechat-steps ol {
+            margin: 0;
+            padding-left: 1.2rem;
+            text-align: left;
+        }
+        .wechat-steps li {
+            margin: 0.3rem 0;
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+        .wechat-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
+        }
+        .wechat-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        .wechat-icon {
+            font-size: 1.3rem;
+            margin-right: 0.4rem;
+        }
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+            }
+            50% { 
+                transform: scale(1.02);
+                box-shadow: 0 6px 16px rgba(255, 107, 107, 0.6);
+            }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                margin: 0.5rem;
+                border-radius: 5px;
+            }
+            .header, .content {
+                padding: 1.5rem;
+            }
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .test-buttons {
+                flex-direction: column;
+            }
+            .test-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 微信浏览器检测功能演示</h1>
+            <p>智能检测、用户友好、记忆功能、动画效果、响应式设计</p>
+        </div>
+        
+        <div class="content">
+            <div class="demo-section">
+                <h2>🧪 功能测试</h2>
+                <p>点击下面的按钮来测试不同的功能：</p>
+                
+                <div class="test-buttons">
+                    <button class="test-btn" onclick="simulateWechat()">模拟微信浏览器</button>
+                    <button class="test-btn" onclick="simulateNormal()">模拟普通浏览器</button>
+                    <button class="test-btn" onclick="simulateMiniprogram()">模拟小程序环境</button>
+                    <button class="test-btn secondary" onclick="clearMemory()">清除记忆</button>
+                    <button class="test-btn secondary" onclick="showStatus()">显示状态</button>
+                </div>
+                
+                <div id="status-display"></div>
+            </div>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>🎯 智能检测</h3>
+                    <p>只在微信浏览器中显示提示，不会在普通浏览器或小程序环境中干扰用户。</p>
+                    <div class="code-block">
+// 检测微信浏览器
+function isWechatBrowser() {
+    var ua = navigator.userAgent.toLowerCase();
+    return ua.indexOf('micromessenger') !== -1;
+}
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>👤 用户友好</h3>
+                    <p>用户可以手动关闭提示，右上角有关闭按钮，点击即可关闭。</p>
+                    <div class="code-block">
+// 关闭按钮
+&lt;button class="wechat-close" 
+        onclick="closeWechatWarning()" 
+        title="关闭提示"&gt;×&lt;/button&gt;
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>💾 记忆功能</h3>
+                    <p>使用localStorage记住用户的选择，关闭后不再显示提示。</p>
+                    <div class="code-block">
+// 检查是否已关闭
+function isWarningDismissed() {
+    return localStorage.getItem('wechat_warning_dismissed') === 'true';
+}
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>✨ 动画效果</h3>
+                    <p>平滑的滑入动画和脉动提醒，提升用户体验。</p>
+                    <div class="code-block">
+// CSS动画
+@keyframes slideInDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>📱 响应式设计</h3>
+                    <p>适配手机屏幕，在不同设备上都有良好的显示效果。</p>
+                    <div class="code-block">
+// 响应式媒体查询
+@media (max-width: 768px) {
+    .wechat-warning { margin: 0.5rem; }
+}
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🛡️ 小程序安全</h3>
+                    <p>检测小程序环境，避免在小程序中显示不必要的提示。</p>
+                    <div class="code-block">
+// 检测小程序环境
+function isMiniprogram() {
+    return ua.indexOf('miniprogram') !== -1 || 
+           window.__wxjs_environment === 'miniprogram';
+}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="demo-section">
+                <h2>📋 使用说明</h2>
+                <ol>
+                    <li><strong>自动检测</strong>：应用会自动检测用户是否在微信浏览器中访问</li>
+                    <li><strong>智能显示</strong>：只在微信浏览器中显示提示，其他环境不干扰</li>
+                    <li><strong>用户控制</strong>：用户可以点击右上角×按钮关闭提示</li>
+                    <li><strong>记忆功能</strong>：关闭后使用localStorage记住，不再重复显示</li>
+                    <li><strong>动画效果</strong>：平滑的滑入动画和脉动效果吸引注意</li>
+                    <li><strong>响应式</strong>：适配各种屏幕尺寸，手机端优化显示</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 微信浏览器检测功能
+        (function() {
+            // 检查是否已经关闭过提示
+            function isWarningDismissed() {
+                try {
+                    return localStorage.getItem('wechat_warning_dismissed') === 'true';
+                } catch (e) {
+                    return false;
+                }
+            }
+            
+            // 标记提示已关闭
+            function dismissWarning() {
+                try {
+                    localStorage.setItem('wechat_warning_dismissed', 'true');
+                } catch (e) {
+                    console.log('无法保存到localStorage');
+                }
+            }
+            
+            // 检测微信浏览器
+            function isWechatBrowser() {
+                var ua = navigator.userAgent.toLowerCase();
+                return ua.indexOf('micromessenger') !== -1;
+            }
+            
+            // 检测是否在小程序环境
+            function isMiniprogram() {
+                var ua = navigator.userAgent.toLowerCase();
+                return ua.indexOf('miniprogram') !== -1 || 
+                       window.__wxjs_environment === 'miniprogram' ||
+                       window.navigator.userAgent.indexOf('miniProgram') !== -1;
+            }
+            
+            // 创建微信提示
+            function createWechatWarning() {
+                // 如果已经关闭过，不再显示
+                if (isWarningDismissed()) {
+                    return;
+                }
+                
+                // 如果在小程序环境，不显示提示
+                if (isMiniprogram()) {
+                    return;
+                }
+                
+                // 检查是否已存在提示
+                var existingWarning = document.querySelector('.wechat-warning');
+                if (existingWarning) {
+                    return;
+                }
+                
+                var warning = document.createElement('div');
+                warning.className = 'wechat-warning';
+                warning.innerHTML = `
+                    <button class="wechat-close" onclick="closeWechatWarning()" title="关闭提示">×</button>
+                    <h3><span class="wechat-icon">⚠️</span>检测到微信浏览器</h3>
+                    <p>为了获得最佳体验，建议在外部浏览器中打开此应用</p>
+                    <div class="wechat-steps">
+                        <ol>
+                            <li>点击右上角菜单按钮（⋮）</li>
+                            <li>选择"在浏览器中打开"</li>
+                            <li>在外部浏览器中享受完整功能</li>
+                        </ol>
+                    </div>
+                `;
+                
+                // 插入到页面顶部
+                document.body.insertBefore(warning, document.body.firstChild);
+                
+                // 延迟添加show类以触发动画
+                setTimeout(function() {
+                    warning.classList.add('show');
+                }, 100);
+            }
+            
+            // 关闭提示函数
+            window.closeWechatWarning = function() {
+                var warning = document.querySelector('.wechat-warning');
+                if (warning) {
+                    warning.style.transform = 'translateY(-100%)';
+                    warning.style.opacity = '0';
+                    setTimeout(function() {
+                        if (warning.parentNode) {
+                            warning.parentNode.removeChild(warning);
+                        }
+                    }, 500);
+                    dismissWarning();
+                    showStatus();
+                }
+            };
+            
+            // 模拟微信浏览器
+            window.simulateWechat = function() {
+                // 临时修改userAgent
+                Object.defineProperty(navigator, 'userAgent', {
+                    writable: true,
+                    value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.0(0x18000029) NetType/WIFI Language/zh_CN'
+                });
+                createWechatWarning();
+                showStatus();
+            };
+            
+            // 模拟普通浏览器
+            window.simulateNormal = function() {
+                // 恢复原始userAgent
+                Object.defineProperty(navigator, 'userAgent', {
+                    writable: true,
+                    value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                });
+                // 移除现有提示
+                var warning = document.querySelector('.wechat-warning');
+                if (warning) {
+                    warning.remove();
+                }
+                showStatus();
+            };
+            
+            // 模拟小程序环境
+            window.simulateMiniprogram = function() {
+                window.__wxjs_environment = 'miniprogram';
+                // 移除现有提示
+                var warning = document.querySelector('.wechat-warning');
+                if (warning) {
+                    warning.remove();
+                }
+                showStatus();
+            };
+            
+            // 清除记忆
+            window.clearMemory = function() {
+                try {
+                    localStorage.removeItem('wechat_warning_dismissed');
+                    showStatus();
+                } catch (e) {
+                    alert('无法清除localStorage');
+                }
+            };
+            
+            // 显示状态
+            window.showStatus = function() {
+                var statusDiv = document.getElementById('status-display');
+                var isWechat = isWechatBrowser();
+                var isMini = isMiniprogram();
+                var isDismissed = isWarningDismissed();
+                var hasWarning = document.querySelector('.wechat-warning') !== null;
+                
+                var status = `
+                    <div class="status ${isWechat ? 'warning' : 'success'}">
+                        <strong>微信浏览器检测:</strong> ${isWechat ? '是' : '否'}
+                    </div>
+                    <div class="status ${isMini ? 'warning' : 'success'}">
+                        <strong>小程序环境:</strong> ${isMini ? '是' : '否'}
+                    </div>
+                    <div class="status ${isDismissed ? 'info' : 'success'}">
+                        <strong>提示已关闭:</strong> ${isDismissed ? '是' : '否'}
+                    </div>
+                    <div class="status ${hasWarning ? 'warning' : 'success'}">
+                        <strong>当前显示提示:</strong> ${hasWarning ? '是' : '否'}
+                    </div>
+                `;
+                
+                statusDiv.innerHTML = status;
+            };
+            
+            // 页面加载完成后检测
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    if (isWechatBrowser()) {
+                        createWechatWarning();
+                    }
+                    showStatus();
+                });
+            } else {
+                if (isWechatBrowser()) {
+                    createWechatWarning();
+                }
+                showStatus();
+            }
+        })();
+    </script>
+</body>
+</html>
