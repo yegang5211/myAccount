@@ -5,9 +5,14 @@ from src.data_manager import DataManager
 import plotly.express as px
 import plotly.graph_objects as go
 
+# 应用版本信息
+APP_VERSION = "0.0.1"
+APP_NAME = "我的记账本"
+APP_BUILD_DATE = "2024-12-19"
+
 # 页面配置
 st.set_page_config(
-    page_title="我的记账本",
+    page_title=f"{APP_NAME} v{APP_VERSION}",
     page_icon="💰",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -390,8 +395,23 @@ def main():
     </script>
     """, height=0)
     
-    # 主标题
-    st.markdown('<h1 class="main-header">💰 我的记账本</h1>', unsafe_allow_html=True)
+    # 主标题和版本信息
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        st.markdown('<h1 class="main-header">💰 我的记账本</h1>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div style="text-align: right; margin-top: 1rem;">
+            <div style="background: linear-gradient(135deg, #2E86AB, #1e5f7a); color: white; padding: 0.5rem 1rem; border-radius: 20px; display: inline-block; font-size: 0.9rem; font-weight: 600;">
+                v{APP_VERSION}
+            </div>
+            <div style="font-size: 0.8rem; color: #666; margin-top: 0.3rem;">
+                {APP_BUILD_DATE}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     # 侧边栏
     with st.sidebar:
@@ -402,11 +422,30 @@ def main():
         )
         
         st.markdown("---")
+        st.markdown("## 📋 版本信息")
+        
+        # 版本信息卡片
+        st.markdown(f"""
+        <div style="background: #f8f9fa; padding: 0.8rem; border-radius: 0.5rem; border-left: 4px solid #2E86AB; margin-bottom: 1rem;">
+            <div style="font-weight: 600; color: #2E86AB; margin-bottom: 0.3rem;">当前版本</div>
+            <div style="font-size: 1.1rem; font-weight: bold;">v{APP_VERSION}</div>
+            <div style="font-size: 0.8rem; color: #666;">{APP_BUILD_DATE}</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 版本历史按钮
+        if st.button("📜 查看版本历史", use_container_width=True):
+            st.session_state.show_version_history = True
+        
+        st.markdown("---")
         st.markdown("## 💡 使用提示")
         st.info("点击上方菜单选择不同功能")
     
+    # 版本历史查看
+    if st.session_state.get('show_version_history', False):
+        show_version_history_page()
     # 根据选择显示不同页面
-    if page == "📝 记账":
+    elif page == "📝 记账":
         show_add_record_page()
     elif page == "📈 统计":
         show_statistics_page()
@@ -678,6 +717,136 @@ def show_records_page():
             else:
                 st.error("❌ 删除失败，请重试")
 
+def show_version_history_page():
+    """显示版本历史页面"""
+    st.markdown("## 📜 版本历史")
+    
+    # 返回按钮
+    if st.button("← 返回主界面", type="secondary"):
+        st.session_state.show_version_history = False
+        st.rerun()
+    
+    st.markdown("---")
+    
+    # 当前版本信息
+    st.markdown("### 🎯 当前版本")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("版本号", f"v{APP_VERSION}")
+    with col2:
+        st.metric("构建日期", APP_BUILD_DATE)
+    with col3:
+        st.metric("状态", "🟢 活跃开发中")
+    
+    st.markdown("---")
+    
+    # 版本历史列表
+    st.markdown("### 📋 版本历史")
+    
+    # 版本数据
+    versions = [
+        {
+            "version": "0.0.1",
+            "date": "2024-12-19",
+            "type": "初始版本",
+            "status": "当前版本",
+            "features": [
+                "基础记账功能（收入/支出记录）",
+                "数据统计和可视化图表",
+                "记录管理和筛选功能",
+                "数据导出和备份功能",
+                "微信浏览器智能检测",
+                "用户友好的交互体验",
+                "响应式设计适配",
+                "版本管理系统"
+            ],
+            "color": "#2E86AB"
+        }
+    ]
+    
+    # 显示版本卡片
+    for i, version in enumerate(versions):
+        with st.container():
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, {version['color']}, {version['color']}88);
+                color: white;
+                padding: 1.5rem;
+                border-radius: 0.8rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            ">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0; font-size: 1.3rem;">v{version['version']} - {version['type']}</h3>
+                    <div style="background: rgba(255,255,255,0.2); padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.8rem;">
+                        {version['status']}
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>发布日期:</strong> {version['date']}
+                </div>
+                <div>
+                    <strong>主要功能:</strong>
+                    <ul style="margin: 0.5rem 0 0 1.5rem; font-size: 0.9rem;">
+            """, unsafe_allow_html=True)
+            
+            for feature in version['features']:
+                st.markdown(f"<li>{feature}</li>", unsafe_allow_html=True)
+            
+            st.markdown("""
+                    </ul>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # 技术栈信息
+    st.markdown("### 🛠️ 技术栈")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        **后端技术:**
+        - Python 3.8+
+        - Streamlit 1.50.0+
+        - Pandas 2.3.2+
+        - OpenPyXL 3.1.5+
+        """)
+    
+    with col2:
+        st.markdown("""
+        **前端技术:**
+        - HTML5/CSS3
+        - JavaScript ES6+
+        - Plotly 6.3.0+
+        - 响应式设计
+        """)
+    
+    # 更新计划
+    with st.expander("🚀 未来更新计划", expanded=False):
+        st.markdown("""
+        **即将推出:**
+        - 数据自动备份功能
+        - 云端数据同步
+        - 多用户支持
+        - 移动端优化
+        - 数据加密保护
+        
+        **长期规划:**
+        - AI智能分析
+        - 预算管理
+        - 投资跟踪
+        - 报表生成
+        """)
+    
+    # 返回按钮
+    st.markdown("---")
+    if st.button("🏠 返回主界面", type="primary", use_container_width=True):
+        st.session_state.show_version_history = False
+        st.rerun()
+
 def show_settings_page():
     st.markdown("## ⚙️ 设置")
     
@@ -710,18 +879,81 @@ def show_settings_page():
     
     st.markdown("---")
     st.markdown("### ℹ️ 关于")
-    st.info("""
-    **我的记账本 v1.0**
     
-    - 使用 Streamlit 开发
-    - 数据存储在 Excel 文件中
-    - 支持收支记录、统计分析、数据导出等功能
+    # 版本信息卡片
+    col1, col2 = st.columns([2, 1])
     
-    💡 **使用提示：**
-    - 定期备份数据文件
-    - 建议每月导出一次数据
-    - 数据文件位置：`data/account_records.xlsx`
-    """)
+    with col1:
+        st.info(f"""
+        **{APP_NAME} v{APP_VERSION}**
+        
+        - 使用 Streamlit 开发
+        - 数据存储在 Excel 文件中
+        - 支持收支记录、统计分析、数据导出等功能
+        - 微信浏览器智能检测和优化
+        - 版本管理和历史查看功能
+        
+        💡 **使用提示：**
+        - 定期备份数据文件
+        - 建议每月导出一次数据
+        - 数据文件位置：`data/account_records.xlsx`
+        - 点击"查看版本历史"了解更新内容
+        """)
+    
+    with col2:
+        st.markdown("#### 📋 版本信息")
+        st.markdown(f"""
+        **版本号：** v{APP_VERSION}  
+        **构建日期：** {APP_BUILD_DATE}  
+        **状态：** 🟢 活跃开发中  
+        **兼容性：** Python 3.8+
+        """)
+        
+        # 版本历史链接
+        st.markdown("#### 📝 更新日志")
+        st.markdown("""
+        - [查看完整更新日志](CHANGELOG.md)
+        - [查看版本清单](VERSION.md)
+        - [项目说明文档](README.md)
+        """)
+    
+    st.markdown("---")
+    st.markdown("### 🔄 版本更新")
+    
+    # 最新更新内容
+    with st.expander("📋 查看最新更新内容", expanded=False):
+        st.markdown("""
+        **v0.0.1 - 初始版本 (2024-12-19)**
+        
+        ✨ **核心功能：**
+        - 基础记账功能（收入/支出记录）
+        - 数据统计和可视化图表
+        - 记录管理和筛选功能
+        - 数据导出和备份功能
+        - 微信浏览器智能检测
+        - 用户友好的交互体验
+        - 响应式设计适配
+        - 版本管理系统
+        
+        🎯 **特色功能：**
+        - 智能微信浏览器检测
+        - 用户可关闭的提示系统
+        - localStorage记忆功能
+        - 平滑动画效果
+        - 版本历史查看
+        """)
+    
+    # 技术栈信息
+    with st.expander("🛠️ 技术栈信息", expanded=False):
+        st.markdown("""
+        | 组件 | 版本 | 用途 |
+        |------|------|------|
+        | Python | 3.8+ | 编程语言 |
+        | Streamlit | 1.50.0+ | Web框架 |
+        | Pandas | 2.3.2+ | 数据处理 |
+        | Plotly | 6.3.0+ | 图表可视化 |
+        | OpenPyXL | 3.1.5+ | Excel操作 |
+        """)
 
 if __name__ == "__main__":
     main()
